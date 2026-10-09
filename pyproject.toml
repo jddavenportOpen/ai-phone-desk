@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-phone-desk"
+version = "0.1.0"
+description = "Give your agents a phone, with one rule: nothing dials until a human 👍s the exact request."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "JD Davenport" }]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+rehearsal = ["anthropic"]
+test = ["pytest>=7"]
+
+[project.scripts]
+phone-desk = "phone_desk.cli:main"
+
+[tool.setuptools]
+packages = ["phone_desk", "phone_desk.approvers"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
