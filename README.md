@@ -1,12 +1,14 @@
 # AI Phone Desk
 
-**Give your agents a phone, with one rule: nothing dials until a human 👍s the exact request.**
+I hate calling places. So I gave my agents a phone, with one rule: nothing dials until I give a thumbs-up to the exact request.
 
-An AI voice agent ([Vapi](https://vapi.ai)) that always says it is an AI calling on your behalf,
-navigates phone menus, waits on hold, gets a confirmation number, and reports back a structured
-outcome and a transcript. Your agents can ask for a call. Only you can place one.
+It's an AI voice agent on [Vapi](https://vapi.ai). It always says it's an AI calling on your behalf. It works through phone menus, waits on hold, gets a confirmation number, and reports back what happened with a transcript. Your agents can ask for a call. Only you can place one.
 
-Unofficial. I'm a user of Vapi, LoopMessage and Instinct, not affiliated with any of them.
+To try it with no accounts: clone it, `pip install -e .`, and run the `phone-desk propose --dry-run` example in the Quickstart below. It prints the exact message you'd approve.
+
+I pulled this out of my own agent system, where it's how my agents make calls for me. Most of the code was written by Claude Code agents I run. I pick what gets built, set the tests it has to pass, and check it by using it.
+
+Unofficial. I use Vapi, LoopMessage and Instinct, and I'm not affiliated with any of them.
 
 ---
 
@@ -16,7 +18,7 @@ An agent that can make phone calls is an agent that can speak for you to a stran
 recording you don't control, and agree to things. So the desk is built around one rule and
 everything else exists to make that rule hold:
 
-> **A call is placed only after the owner 👍s one message that shows every word the voice agent
+> **A call is placed only after the owner gives a thumbs-up to one message that shows every word the voice agent
 > will know, and it places exactly that call, once.**
 
 Concretely:
@@ -26,11 +28,11 @@ Concretely:
   facts it may share. The voice agent knows nothing about you that isn't in the bubble. The only
   other text it gets is a fixed set of hard rules, identical on every call, which can only make it
   say or agree to less.
-- **The 👍 is bound to the exact text.** Approving mints a single-use token tied to the sha256 of
+- **The thumbs-up is bound to the exact text.** Approving mints a single-use token tied to the sha256 of
   the bubble. Change one character of the request afterwards (the number, a fact, the goal) and
   the token no longer admits anything.
 - **The approval is short-lived and re-checked.** It lapses after 16 hours. At dial time the
-  approver re-proves the 👍 against the messaging vendor's own records, so a hand-edited state
+  approver re-proves the thumbs-up against the messaging vendor's own records, so a hand-edited state
   file can't place a call.
 - **And then the boring guards:** a calling window (08:00-20:00 in your time zone), a daily cap,
   and a kill switch file.
@@ -39,36 +41,29 @@ Concretely:
 
 I run it both ways, so the repo does both.
 
-1. **Your own agent stack (the personal AI OS way).** Your agent, for example Claude Code with the
-   included skill, writes the brief and proposes the call. You 👍 it in iMessage (or at a terminal
+1. **Your own agent stack.** Your agent, for example Claude Code with the
+   included skill, writes the brief and proposes the call. You thumbs-up it in iMessage (or at a terminal
    while you're testing). The desk dials, then tells you how it went.
-2. **An external agent you don't control (the Instinct way).** An outside autonomous agent can
+2. **An external agent you don't control.** I use Instinct, a hosted autonomous agent with its own
+   browser and models that I reach over iMessage. An outside agent like that can
    **request** a call by sending `CALL REQUEST` plus one JSON object, and can **research** a call
    before it's placed. Its request is parsed as untrusted data, validated, capped at 3 a day, and
-   held as a draft. It still dials only on your 👍, on a bubble marked "Instinct asked for this".
+   held as a draft. It still dials only on your thumbs-up, on a bubble marked "Instinct asked for this".
    It can never dial, add facts after the fact, or skip approval. See
    [docs/external-agent.md](docs/external-agent.md).
 
 ```mermaid
 flowchart TD
-  subgraph OWN["1 · Your own agent stack"]
-    A1["Your agent, e.g. Claude Code<br/>phone-desk propose"]
-  end
-  subgraph EXT["2 · External agent, e.g. Instinct"]
-    X1["CALL REQUEST + one JSON object"] --> X2{"Parsed as untrusted data<br/>validated · 3 a day"}
-    X2 -- "malformed · premium or Caribbean number · card/SSN/password fact" --> X3["Dropped"]
-    X2 -- ok --> X4["Held as a DRAFT<br/>you have not been messaged"]
-    X4 -- "your side confirms the number<br/>phone-desk surface" --> B
-    X5["Research job: public pages, cited URLs"] -.-> X6["Note on the request<br/>a different number is FLAGGED, never swapped in"]
-  end
-  A1 --> B["ONE bubble to you, showing every field"]
-  B -- "👎" --> D["Dropped"]
-  B -- "👍 on that exact bubble, proven" --> T["Token bound to sha256 of the bubble<br/>single use · expires in 16 h"]
-  T --> G{"At dial time: kill switch · 08:00-20:00 · daily cap<br/>token and hash · 👍 re-proven with the vendor"}
+  A1["Your agent, e.g. Claude Code<br/>phone-desk propose"] --> B["ONE bubble to you, showing every field"]
+  B -- "thumbs-down" --> D["Dropped"]
+  B -- "thumbs-up on that exact bubble, proven" --> T["Token bound to sha256 of the bubble<br/>single use · expires in 16 h"]
+  T --> G{"At dial time: kill switch · 08:00-20:00 · daily cap<br/>token and hash · thumbs-up re-proven with the vendor"}
   G -- "any check fails" --> H["Held or refused. Nothing dialed."]
   G -- pass --> V["Vapi dials:<br/>Hi, this is an AI assistant calling on behalf of ..."]
   V --> R["Outcome + transcript saved · you get the result"]
 ```
+
+The external-agent path, with its own checks, is drawn in [docs/external-agent.md](docs/external-agent.md).
 
 ---
 
@@ -117,7 +112,7 @@ That prints the exact bubble you'd approve. Drop `--dry-run` to record it, then
 `LOOPMESSAGE_*` values. Point the LoopMessage webhook at `phone-desk serve` (it binds to
 `127.0.0.1:8787`; put a tunnel or a TLS reverse proxy in front) and set the same Authorization
 value in the dashboard and in `LOOPMESSAGE_WEBHOOK_SECRET`. Bubbles now arrive in iMessage and a
-👍 approves.
+a thumbs-up approves.
 
 **Give your Claude Code agent the skill.**
 
@@ -150,10 +145,10 @@ call is ever proposed:
 
 | Check | Where | On failure |
 |---|---|---|
-| A proven 👍 on the exact bubble | approver | nothing queues |
+| A proven thumbs-up on the exact bubble | approver | nothing queues |
 | Bubble under 24 h old when approved | desk | request expires |
 | Token: unused, under 16 h, this request, sha256 of this exact text | gate | refused; a text mismatch does not burn the token |
-| 👍 re-proven against the vendor at dial time | approver | back to waiting for a 👍 |
+| Thumbs-up re-proven against the vendor at dial time | approver | back to waiting for a thumbs-up |
 | Kill switch file `<state>/phone-desk.OFF` absent | gate | held |
 | 08:00-20:00 in `OWNER_TZ` | gate | held until the window |
 | Daily cap (10) | gate | held, and you're told once |
@@ -170,15 +165,15 @@ Not cryptographic. On one machine, anything with write access to the state direc
 messaging vendor's API key can forge an approval. The design stops accidents, confused agents and
 naive prompt injection, each of which would have to forge the vendor's records on purpose. The
 **terminal approver** proves only that someone is at a real TTY; use it to test, not for calls you
-care about. Keep the voice-agent's API keys away from the agents that propose calls.
+care about. Keep the voice agent's API keys away from the agents that propose calls.
 
 ---
 
-## Honest limits
+## Limits
 
 - **Rehearsal is text.** `phone-desk rehearse <id>` plays the voice agent's exact instructions
   against a simulated front desk in text (needs `pip install anthropic`, or use `--print` and any
-  chat model). It shows how the *brief* plays: not the voice, the latency, or a real phone tree.
+  chat model). It shows how the *brief* plays. It can't show the voice, the latency or a real phone tree.
   The brief's facts go to whichever model runs the rehearsal.
 - **It costs money.** Vapi bills per minute; expect roughly $0.10-0.20 per minute all in
   (telephony, speech, the model). A 15-minute hold is a few dollars.
@@ -188,8 +183,8 @@ care about. Keep the voice-agent's API keys away from the agents that propose ca
 - **The model can still get it wrong.** It can misunderstand an answer or miss a menu option.
   The transcript is the record: read it before you rely on a result.
 - **Robocall and recording laws are yours to follow.** The desk discloses that it's an AI and that
-  the call is recorded, and calls businesses one at a time on your explicit approval. That is a
-  design choice, not legal advice.
+  the call is recorded, and calls businesses one at a time on your explicit approval. That's a
+  design choice. It isn't legal advice.
 
 ---
 

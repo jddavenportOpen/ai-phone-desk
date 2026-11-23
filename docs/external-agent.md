@@ -29,6 +29,29 @@ Run them on the two halves:
 The call fails question 2, so it does not route out. The external agent can only put a request
 in front of you, and the voice agent says what you approved and nothing else.
 
+## The whole flow, both paths
+
+```mermaid
+flowchart TD
+  subgraph OWN["1 · Your own agent stack"]
+    A1["Your agent, e.g. Claude Code<br/>phone-desk propose"]
+  end
+  subgraph EXT["2 · External agent, e.g. Instinct"]
+    X1["CALL REQUEST + one JSON object"] --> X2{"Parsed as untrusted data<br/>validated · 3 a day"}
+    X2 -- "malformed · premium or Caribbean number · card/SSN/password fact" --> X3["Dropped"]
+    X2 -- ok --> X4["Held as a DRAFT<br/>you have not been messaged"]
+    X4 -- "your side confirms the number<br/>phone-desk surface" --> B
+    X5["Research job: public pages, cited URLs"] -.-> X6["Note on the request<br/>a different number is FLAGGED, never swapped in"]
+  end
+  A1 --> B["ONE bubble to you, showing every field"]
+  B -- "👎" --> D["Dropped"]
+  B -- "👍 on that exact bubble, proven" --> T["Token bound to sha256 of the bubble<br/>single use · expires in 16 h"]
+  T --> G{"At dial time: kill switch · 08:00-20:00 · daily cap<br/>token and hash · 👍 re-proven with the vendor"}
+  G -- "any check fails" --> H["Held or refused. Nothing dialed."]
+  G -- pass --> V["Vapi dials:<br/>Hi, this is an AI assistant calling on behalf of ..."]
+  V --> R["Outcome + transcript saved · you get the result"]
+```
+
 ## 1. The contract you paste to it (once)
 
 Generate it with your owner name filled in:
