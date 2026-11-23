@@ -2,7 +2,7 @@
 
 I hate calling places. So I gave my agents a phone, with one rule: nothing dials until I give a thumbs-up to the exact request.
 
-It's an AI voice agent on [Vapi](https://vapi.ai). It always says it's an AI calling on your behalf. It works through phone menus, waits on hold, gets a confirmation number, and reports back what happened with a transcript. Your agents can ask for a call. Only you can place one.
+It's an AI voice agent on [Vapi](https://vapi.ai). It always says it's an AI calling on your behalf. It works through phone menus, waits on hold, gets a confirmation number, and reports back what happened with a transcript. Your agents can request a call, and it dials only after you approve it.
 
 To try it with no accounts: clone it, `pip install -e .`, and run the `phone-desk propose --dry-run` example in the Quickstart below. It prints the exact message you'd approve.
 
@@ -111,8 +111,8 @@ That prints the exact bubble you'd approve. Drop `--dry-run` to record it, then
 **Approve from your phone (LoopMessage).** Set `PHONE_DESK_APPROVER=loopmessage` and the
 `LOOPMESSAGE_*` values. Point the LoopMessage webhook at `phone-desk serve` (it binds to
 `127.0.0.1:8787`; put a tunnel or a TLS reverse proxy in front) and set the same Authorization
-value in the dashboard and in `LOOPMESSAGE_WEBHOOK_SECRET`. Bubbles now arrive in iMessage and a
-a thumbs-up approves.
+value in the dashboard and in `LOOPMESSAGE_WEBHOOK_SECRET`. Bubbles now arrive in iMessage, and a
+thumbs-up approves.
 
 **Give your Claude Code agent the skill.**
 
@@ -183,8 +183,8 @@ care about. Keep the voice agent's API keys away from the agents that propose ca
 - **The model can still get it wrong.** It can misunderstand an answer or miss a menu option.
   The transcript is the record: read it before you rely on a result.
 - **Robocall and recording laws are yours to follow.** The desk discloses that it's an AI and that
-  the call is recorded, and calls businesses one at a time on your explicit approval. That's a
-  design choice. It isn't legal advice.
+  the call is recorded, and calls businesses one at a time on your explicit approval. This is how I
+  built it. Check the laws where you call.
 
 ---
 
